@@ -630,7 +630,7 @@
             var myBlogDomain = 'salahcivildev-web.blogspot.com';
             var currentHost = window.location.hostname;
             var blogUrl = (currentHost.includes('localhost') || currentHost === '127.0.0.1' || currentHost.includes('github.io')) ? myBlogDomain : currentHost;
-            var maxPosts = 20;
+            var maxPosts = 200;
             var feedUrl = 'https://' + blogUrl + '/feeds/posts/default?alt=json-in-script&callback=handlePosts&max-results=' + maxPosts;
             var grid = document.getElementById('postsGrid');
             var loadingMsg = document.getElementById('postsLoading');
