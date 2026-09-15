@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <!-- ================= إعدادات الميتا والتجاوب ================= -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>موقع المهندس</title>
+
+    <!-- ================= استدعاء الخطوط ================= -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- ================= التنسيقات (CSS) ================= -->
+    <style>
+        /* --- تهيئة عامة وفرض الخط --- */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            font-family: 'Cairo', sans-serif !important;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f8fafc;
+            overflow-x: hidden;
+        }
+
+        /* --- شريط التنقل العلوي (Topbar) --- */
+        .topbar-wrapper {
+            direction: ltr;
+            background: #0f172a;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 70px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .menu-btn {
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .menu-btn:hover { background: rgba(255,255,255,0.1); }
+        .logo-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            max-width: 60%;
+        }
+        .logo-container img {
+            height: 45px;
+            max-width: 100%;
+            width: auto;
+            object-fit: contain;
+        }
+
+        /* --- القوائم الجانبية (Sidebars) --- */
+        .sidebar {
+            direction: rtl;
+            position: fixed;
+            top: 0;
+            width: 300px;
+            height: 100vh;
+            background: #1e293b;
+            z-index: 2000;
+            transition: transform 0.3s ease;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        #sidebar-right { right: 0; transform: translateX(100%); box-shadow: -5px 0 20px rgba(0,0,0,0.5); }
+        #sidebar-left { left: 0; width: 280px; transform: translateX(-100%); box-shadow: 5px 0 20px rgba(0,0,0,0.5); }
+        
+        .sidebar-close { text-align: left; cursor: pointer; margin-bottom: 20px; -webkit-tap-highlight-color: transparent; }
+        #sidebar-left .sidebar-close { text-align: right; }
+        
+        .sidebar-link {
+            display: flex; align-items: center; gap: 12px; padding: 12px;
+            text-decoration: none; color: #cbd5e1; border-radius: 8px; margin-bottom: 8px;
+            transition: background 0.2s;
+        }
+        .sidebar-link:hover { background: rgba(240,192,64,0.1); color: #fff; }
+        .sidebar-link span { font-weight: 700; }
+        
+        .sidebar-section { margin-bottom: 30px; }
+        .sidebar-title { color: #f0c040; font-size: 1.2rem; margin: 0 0 10px; border-bottom: 1px solid #334155; padding-bottom: 5px; }
+        .sidebar-text { color: #94a3b8; font-size: 0.9rem; line-height: 1.6; margin: 0 0 8px; }
+        .sidebar-simple-link { display: block; color: #94a3b8; text-decoration: none; padding: 5px 0; font-size: 0.9rem; transition: color 0.2s;}
+        .sidebar-simple-link:hover { color: #f0c040; }
+        
+        .sidebar-socials { display: flex; gap: 15px; justify-content: center; margin-top: 10px; }
+        .social-circle { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; color: #fff; text-decoration: none; transition: transform 0.2s; }
+        .social-circle:hover { transform: scale(1.1); }
+        .bg-whatsapp { background: #25D366; }
+
+        #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1500; transition: 0.3s; -webkit-tap-highlight-color: transparent; }
+
+        /* --- شريط الأخبار العاجلة (News Bar) --- */
+        .news-bar { background: linear-gradient(135deg,#0f172a,#1e293b); border-top: 1px solid rgba(240,192,64,.3); border-bottom: 1px solid rgba(240,192,64,.3); height: 50px; overflow: hidden; position: relative; }
+        .news-container { position: relative; width: 100%; height: 100%; }
+        .news-item { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 10px; opacity: 0; transform: translateY(15px); transition: 0.5s ease; pointer-events: none; text-align: center; padding: 0 10px; }
+        .news-item.active { opacity: 1; transform: translateY(0); pointer-events: auto; }
+        .news-item a { color: #fff; text-decoration: none; font-size: 14px; font-weight: 700; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+        .news-item a:hover { color: #f0c040; }
+        .news-badge { background: #f0c040; color: #0f172a; padding: 3px 8px; border-radius: 20px; font-size: 11px; font-weight: 800; white-space: nowrap; }
+
+        /* --- قسم أحدث المقالات (التجاوب الكامل المخصص) --- */
+        .latest-posts-section { background: #0f172a; padding: 30px 10px; direction: rtl; }
+        .section-title { text-align: center; font-size: 1.8rem; font-weight: 800; color: #f8fafc; margin: 0 0 25px; }
+        .section-title span { color: #f0c040; }
+        
+        /* التوزيع الشبكي (دائماً عمودين للجوال كحد أدنى) */
+        .posts-grid { 
+            display: grid; 
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 10px; 
+            max-width: 1400px; 
+            margin: 0 auto; 
+        }
+
+        /* تنسيق البطاقة الأساسي */
+        .post-card { 
+            background: #1e293b; 
+            border-radius: 10px; 
+            overflow: hidden; 
+            display: flex; 
+            flex-direction: column; 
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+        }
+
+        /* حاوية الصورة وتأثير التكبير */
+        .post-thumb-wrapper {
+            width: 100%;
+            height: 110px;
+            overflow: hidden;
+            display: block;
+        }
+        .post-thumb { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+            display: block; 
+            background: #334155; 
+            transition: transform 0.4s ease;
+        }
+
+        .post-body { padding: 10px; display: flex; flex-direction: column; flex: 1; }
+        .post-title { 
+            font-size: 0.85rem; 
+            font-weight: 700; 
+            color: #f1f5f9; 
+            margin: 0 0 8px; 
+            line-height: 1.4; 
+            display: -webkit-box; 
+            -webkit-line-clamp: 2; 
+            -webkit-box-orient: vertical; 
+            overflow: hidden; 
+        }
+        .post-title a { color: inherit; text-decoration: none; }
+        .post-snippet { display: none; } /* مخفي في الجوال */
+        .post-read-more { 
+            display: inline-block; 
+            margin-top: auto; 
+            background: linear-gradient(135deg, #f0c040, #e0a800); 
+            color: #0f172a; 
+            text-decoration: none; 
+            padding: 6px 12px; 
+            border-radius: 20px; 
+            font-weight: 800; 
+            font-size: 0.75rem; 
+            text-align: center;
+            transition: 0.2s;
+        }
+
+        /* شاشات التابلت (3 أعمدة مع إظهار الوصف) */
+        @media (min-width: 768px) { 
+            .latest-posts-section { padding: 40px 20px; }
+            .section-title { font-size: 2rem; }
+            .posts-grid { grid-template-columns: repeat(3, 1fr); gap: 20px; }
+            .post-thumb-wrapper { height: 160px; }
+            .post-body { padding: 16px; }
+            .post-title { font-size: 1.1rem; margin-bottom: 10px; }
+            .post-snippet { 
+                display: -webkit-box; 
+                font-size: 0.9rem; 
+                color: #94a3b8; 
+                line-height: 1.6; 
+                margin-bottom: 15px; 
+                flex: 1; 
+                -webkit-line-clamp: 3; 
+                -webkit-box-orient: vertical; 
+                overflow: hidden; 
+            }
+            .post-read-more { font-size: 0.9rem; padding: 8px 20px; border-radius: 30px; align-self: flex-start; }
+        }
+
+        /* شاشات الحاسوب (4 أعمدة + تأثيرات الحركة التفاعلية) */
+        @media (min-width: 1024px) { 
+            .posts-grid { grid-template-columns: repeat(4, 1fr); gap: 25px; }
+            
+            .post-card:hover { 
+                transform: translateY(-5px) scale(1.03); 
+                box-shadow: 0 20px 30px rgba(0,0,0,0.5); 
+                border-color: rgba(240,192,64,0.5); 
+                z-index: 10;
+            }
+            .post-card:hover .post-thumb { transform: scale(1.1); }
+            .post-read-more:hover { filter: brightness(1.1); transform: scale(1.05); }
+        }
+
+        .posts-loading { text-align: center; color: #94a3b8; font-size: 1rem; padding: 20px; grid-column: 1 / -1; }
+
+        /* --- تذييل الموقع (Footer) --- */
+        .modern-footer { background: #0a192f; padding: 30px 20px; text-align: center; direction: rtl; }
+        .social-platforms { display: flex; justify-content: center; flex-wrap: wrap; gap: 1.5rem; margin-bottom: 25px; }
+        .social-item { position: relative; overflow: hidden; border-radius: 50%; display: flex; align-items: center; justify-content: center; width: 45px; height: 45px; }
+        .social-item::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(120deg, transparent, rgba(243,191,83,0.2), transparent); transition: 0.5s; }
+        .social-item:hover::before { left: 100%; }
+        .social-icon { width: 26px; height: 26px; object-fit: contain; transition: all 0.3s ease; }
+        .social-item:hover { background: rgba(243,191,83,0.1); transform: translateY(-5px); box-shadow: 0 8px 20px rgba(243,191,83,0.15); }
+        .social-item:hover .social-icon { transform: scale(1.2) rotate(15deg); }
+        
+        .copyright-bar p { color: #8892b0; font-size: 0.9rem; line-height: 1.8; margin: 0; }
+        .copyright-bar a { color: inherit; text-decoration: none; transition: color 0.2s; }
+        .copyright-bar a:hover { color: #f3bf53; }
+        .brand-name { color: #f3bf53; font-weight: 700; }
+        .current-year::after { content: ''; display: inline-block; width: 4px; height: 4px; background: #f3bf53; margin: 0 8px; vertical-align: middle; border-radius: 50%; }
+    </style>
+</head>
+<body>
+
+    <!-- ================= شريط التنقل العلوي ================= -->
+    <header class="topbar-wrapper">
+        <div class="menu-btn" onclick="toggleSidebar('left')">
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#f0c040" stroke-width="2.5" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </div>
+        <div class="logo-container">
+            <img src="https://blogger.googleusercontent.com/img/a/AVvXsEioxsjTRSOwUIUw1kksoGJZwdt-839dNAvUpRIS3aOeMgQIuLbOy8Ia4Ux5HQdIiCqJLTJK2HEGA83wpAkACW9aJiSjNII87i16qySS2vRdnYplwSNcvyOocp8xcdScUDG_G7YsY4p2hjd69HfdV8_AC-ph0_4TmSgWwprisdzlz48ZKEM-kx7nJiCB9XCw=w800" alt="شعار الموقع">
+        </div>
+        <div class="menu-btn" onclick="toggleSidebar('right')">
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#f0c040" stroke-width="2.5" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </div>
+    </header>
+
+    <!-- ================= القائمة الجانبية اليمنى ================= -->
+    <aside id="sidebar-right" class="sidebar">
+        <div class="sidebar-close" onclick="toggleSidebar('right')">
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#f0c040" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </div>
+        <div class="sidebar-section">
+            <a href="#" class="sidebar-link"><span>🏠 الرئيسية</span></a>
+            <a href="#" class="sidebar-link"><span>💼 أعمالي</span></a>
+        </div>
+        <div class="sidebar-section">
+            <h3 class="sidebar-title">من نحن</h3>
+            <p class="sidebar-text">نحن فريق متخصص في الهندسة المدنية والتسويق الإلكتروني، نقدم حلولاً رقمية ومشاريع متكاملة.</p>
+        </div>
+        <div class="sidebar-section">
+            <h3 class="sidebar-title">اتصل بنا</h3>
+            <p class="sidebar-text">📧 info@example.com</p>
+            <p class="sidebar-text">📞 +966 50 000 0000</p>
+        </div>
+        <div class="sidebar-section" style="margin-top:auto; border-top:1px solid #334155; padding-top:20px;">
+            <h3 class="sidebar-title" style="border:none; text-align:center; font-size:1rem;">تواصل مباشر</h3>
+            <div class="sidebar-socials">
+                <a href="https://wa.me/966551693175" target="_blank" class="social-circle bg-whatsapp">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                </a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ================= القائمة الجانبية اليسرى ================= -->
+    <aside id="sidebar-left" class="sidebar">
+        <div class="sidebar-close" onclick="toggleSidebar('left')">
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#f0c040" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </div>
+        <div class="sidebar-section">
+            <a href="#" class="sidebar-link"><span>📁 معرض الأعمال</span></a>
+            <a href="#" class="sidebar-link"><span>🛠️ خدماتي</span></a>
+            <a href="#" class="sidebar-link"><span>📝 المدونة</span></a>
+        </div>
+    </aside>
+
+    <div id="overlay" onclick="closeSidebars()"></div>
+
+    <!-- ================= شريط الأخبار ================= -->
+    <div class="news-bar">
+        <div class="news-container" id="newsContainer">
+            <div class="news-item active"><span class="news-badge">عرض</span><a href="#">🚀 خصم يصل إلى 50% على التطبيقات الهندسية</a></div>
+            <div class="news-item"><span class="news-badge">جديد</span><a href="#">📦 تصفح أحدث المنتجات المضافة لمتجر لوكسيفا</a></div>
+            <div class="news-item"><span class="news-badge">دعم</span><a href="#">⭐ استشارات ودعم فني هندسي متكامل للعملاء</a></div>
+        </div>
+    </div>
+
+    <!-- ================= قسم أحدث المقالات (Blogger API) ================= -->
+    <section class="latest-posts-section">
+        <h2 class="section-title">📰 <span>أحدث</span> المقالات</h2>
+        <div class="posts-grid" id="postsGrid">
+            <div class="posts-loading" id="postsLoading">جارٍ تحميل المشاركات...</div>
+        </div>
+    </section>
+
+    <!-- ================= الفوتر ================= -->
+    <footer class="modern-footer">
+        <div class="social-platforms">
+            <a class="social-item" href="https://www.facebook.com/moftahapp" target="_blank">
+                <img alt="فيسبوك" class="social-icon" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEijsKXLPcS2werVri6sm7shbdF66UgUbgDqUnxUY7Prs8bAKw_99xZgvoD5sjjA1c_Jt3XefgMpt-ubCIFyQWZgYuV4wu1shdlQtuQf5b9idvXg4cFSpRkOVqQVq1w2urDX8Sf2y19CpqyTLR3XzHQKCXNMGsay4WIYokr8iuVEFsRlKlsCeG_lLF4GSgfQ/s512/4202110facebooklogosocialsocialmedia-115707_115594(1).png">
+            </a>
+            <a class="social-item" href="https://api.whatsapp.com/send/?phone=%2B966551693175" target="_blank">
+                <img alt="واتساب" class="social-icon" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEipg_PbNupYyxurNWdpa68JBudcSQ7zDWAyFewqFJT7keOSqJX0LhL5JbdSpaap9V98tK_enthNGIDrjfRmC-hoobJZHggx8wPPsVOwMaoYWuN5lM8soU1y9z5pqPZZ8RQBkrq-xzSh9nVQ77-_GpseTspC9migC8Xb5oRaNDrYrfqxLVjY1O_cQ_ScQMuI/s512/whatsapp_icon-icons.com_53606(1).png">
+            </a>
+            <a class="social-item" href="#" target="_blank">
+                <img alt="يوتيوب" class="social-icon" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjY-s2RHtEGr0QMBbPC8vMBeexghk8K1rOkaYhlkCJK2RM17uYkncKvYUcJQ8XKUO7oR-5VtD6HkUAhI1g5lVogR2KkTWmKtMgA3wS-RoMu4wGziogxLlwC1T4hrUQTcO1WuHEvdlL2o1afM8-wym61jStuJZAP5ZvDrTu57aKFPCiP5WWg0fYFCv0VTdur/s256/social_youtube_2756(1).png">
+            </a>
+        </div>
+        
+        <div class="copyright-bar">
+            <p><a href="https://salah-ali-civil.blogspot.com/p/blog-page_24.html" target="_blank">© <span class="current-year"></span> موقع <strong class="brand-name">المهندس صلاح علي الشريف</strong> — جميع خدمات الصيانة والهندسة المدنية و المعمارية</a></p>
+        </div>
+    </footer>
+
+    <!-- ================= أكواد الجافاسكريبت (JS) ================= -->
+    <script>
+        // 1. نظام القوائم الجانبية (Sidebars)
+        const overlay = document.getElementById('overlay');
+        const sidebarRight = document.getElementById('sidebar-right');
+        const sidebarLeft = document.getElementById('sidebar-left');
+
+        function toggleSidebar(side) {
+            if (side === 'right') {
+                if (sidebarRight.style.transform === 'translateX(0px)') {
+                    closeSidebars();
+                } else {
+                    sidebarRight.style.transform = 'translateX(0px)';
+                    sidebarLeft.style.transform = 'translateX(-100%)';
+                    overlay.style.display = 'block';
+                }
+            } else if (side === 'left') {
+                if (sidebarLeft.style.transform === 'translateX(0px)') {
+                    closeSidebars();
+                } else {
+                    sidebarLeft.style.transform = 'translateX(0px)';
+                    sidebarRight.style.transform = 'translateX(100%)';
+                    overlay.style.display = 'block';
+                }
+            }
+        }
+
+        function closeSidebars() {
+            sidebarRight.style.transform = 'translateX(100%)';
+            sidebarLeft.style.transform = 'translateX(-100%)';
+            overlay.style.display = 'none';
+        }
+
+        // 2. شريط الأخبار التلقائي (News Ticker)
+        document.addEventListener('DOMContentLoaded', function() {
+            const items = document.querySelectorAll('.news-item');
+            const container = document.getElementById('newsContainer');
+            if(items.length === 0) return;
+            
+            let current = 0;
+            let newsTimer;
+
+            function startNews() {
+                newsTimer = setInterval(function() {
+                    items[current].classList.remove('active');
+                    current = (current + 1) % items.length;
+                    items[current].classList.add('active');
+                }, 4000); 
+            }
+            
+            startNews();
+            container.addEventListener('mouseenter', () => clearInterval(newsTimer));
+            container.addEventListener('mouseleave', startNews);
+
+            const yearElement = document.querySelector('.current-year');
+            if (yearElement) yearElement.textContent = new Date().getFullYear();
+        });
+
+        // 3. جلب مقالات بلوجر (Blogger JSONP API)
+        (function() {
+            const myBlogDomain = 'salahcivildev-web.blogspot.com'; 
+            const currentHost = window.location.hostname;
+            const blogUrl = (currentHost.includes('localhost') || currentHost === '127.0.0.1' || currentHost.includes('github.io')) ? myBlogDomain : currentHost;
+            const maxPosts = 80; 
+            const cleanBlogUrl = blogUrl.replace(/^(https?:\/\/)?/, '');
+            const feedUrl = `https://${cleanBlogUrl}/feeds/posts/default?alt=json-in-script&callback=handleBloggerPosts&max-results=${maxPosts}`;
+
+            const grid = document.getElementById('postsGrid');
+            const loadingMsg = document.getElementById('postsLoading');
+
+            function extractImage(htmlContent) {
+                const regex = /<img[^>]+src=["']([^"']+)["'][^>]*>/i;
+                const match = htmlContent.match(regex);
+                return match ? match[1] : 'https://placehold.co/600x400/1e293b/94a3b8?text=لا+توجد+صورة';
+            }
+
+            function stripHtml(html) {
+                const div = document.createElement('div');
+                div.innerHTML = html;
+                return div.textContent || div.innerText || '';
+            }
+
+            window.handleBloggerPosts = function(data) {
+                if (loadingMsg) loadingMsg.style.display = 'none';
+                const entries = data.feed.entry || [];
+
+                if (entries.length === 0) {
+                    grid.innerHTML = '<p style="grid-column:1/-1; text-align:center; color:#94a3b8;">لا توجد مشاركات منشورة حالياً.</p>';
+                    return;
+                }
+
+                let html = '';
+                entries.forEach(entry => {
+                    const title = entry.title.$t;
+                    let link = '#';
+                    if(entry.link) {
+                        const linkObj = entry.link.find(l => l.rel === 'alternate');
+                        if(linkObj) link = linkObj.href;
+                    }
+                    const content = entry.content ? entry.content.$t : (entry.summary ? entry.summary.$t : '');
+                    const image = extractImage(content);
+                    const snippet = stripHtml(content).substring(0, 110) + '...';
+
+                    html += `
+                        <article class="post-card">
+                            <a href="${link}" target="_blank" class="post-thumb-wrapper">
+                                <img class="post-thumb" src="${image}" alt="${title}" loading="lazy" onerror="this.src='https://placehold.co/600x400/1e293b/94a3b8?text=خطأ+بالصورة'">
+                            </a>
+                            <div class="post-body">
+                                <h3 class="post-title"><a href="${link}" target="_blank">${title}</a></h3>
+                                <p class="post-snippet">${snippet}</p>
+                                <a href="${link}" class="post-read-more" target="_blank">متابعة القراءة</a>
+                            </div>
+                        </article>
+                    `;
+                });
+                grid.innerHTML = html;
+            };
+
+            const script = document.createElement('script');
+            script.src = feedUrl;
+            script.async = true;
+            document.body.appendChild(script);
+
+            script.onerror = function() {
+                if (loadingMsg) {
+                    loadingMsg.innerHTML = '❌ فشل تحميل المشاركات. يرجى التحقق من الاتصال بالإنترنت.';
+                }
+            };
+        })();
+    </script>
+</body>
+</html>
